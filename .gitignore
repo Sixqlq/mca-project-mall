@@ -11,3 +11,9 @@ target
 .project
 .classpath
 .factorypath
+
+**/mvnw
+**/mvnw.cmd
+**/.gitignore
+**/target
+**/.mvn
