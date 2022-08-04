@@ -5,6 +5,12 @@ spring:
     password: root
     url: jdbc:mysql://192.168.153.128:3306/mall-oms
     driver-class-name: com.mysql.cj.jdbc.Driver
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.153.128:8848
+  application:
+    name: mall-order
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -14,3 +20,7 @@ mybatis-plus:
 
 server:
   port: 8030
+
+user:
+  name: zhangSan
+  age: 18

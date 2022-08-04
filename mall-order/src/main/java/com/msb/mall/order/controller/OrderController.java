@@ -4,12 +4,11 @@ import java.util.Arrays;
 import java.util.Map;
 
 
+import com.msb.mall.order.feign.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.web.bind.annotation.*;
 
 import com.msb.mall.order.entity.OrderEntity;
 import com.msb.mall.order.service.OrderService;
@@ -25,11 +24,32 @@ import com.msb.common.utils.R;
  * @email 2390608028@qq.com
  * @date 2022-07-31 20:26:53
  */
+@RefreshScope // 动态刷新配置数据
 @RestController
 @RequestMapping("order/order")
 public class OrderController {
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private ProductService productService;
+
+    @GetMapping("/products")
+    public R queryProduct(){
+        // OpenFeign 远程调用服务
+        return R.ok().put("products", productService.queryAllBrand());
+    }
+
+    @Value("${user.name}")
+    private String name;
+
+    @Value("${user.age}")
+    private Integer age;
+
+    @GetMapping("/users")
+    public R queryUser(){
+        return R.ok().put("name", name).put("age", age);
+    }
 
     /**
      * 列表

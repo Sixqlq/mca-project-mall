@@ -5,11 +5,7 @@ import java.util.Map;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.msb.mall.product.entity.BrandEntity;
 import com.msb.mall.product.service.BrandService;
@@ -30,6 +26,13 @@ import com.msb.common.utils.R;
 public class BrandController {
     @Autowired
     private BrandService brandService;
+
+    @GetMapping("/all")
+    public R queryAllBrand() {
+        BrandEntity entity = new BrandEntity();
+        entity.setName("华为");
+        return R.ok().put("brands", entity);
+    }
 
     /**
      * 列表
