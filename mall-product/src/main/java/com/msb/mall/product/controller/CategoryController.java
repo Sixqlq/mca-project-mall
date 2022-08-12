@@ -1,15 +1,12 @@
 package com.msb.mall.product.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.msb.mall.product.entity.CategoryEntity;
 import com.msb.mall.product.service.CategoryService;
@@ -39,6 +36,17 @@ public class CategoryController {
     public R list(@RequestParam Map<String, Object> params){
         PageUtils page = categoryService.queryPage(params);
 
+        return R.ok().put("page", page);
+    }
+
+    /**
+     * 返回树形结构的类别数据
+     * @param params
+     * @return
+     */
+    @GetMapping("/listTree")
+    public R listTree(@RequestParam Map<String, Object> params){
+        List<CategoryEntity> page = categoryService.queryPageWithTree(params);
         return R.ok().put("page", page);
     }
 
@@ -77,12 +85,23 @@ public class CategoryController {
     }
 
     /**
-     * 删除
+     * 批量修改
+     */
+    @RequestMapping("/updateBatch")
+    //@RequiresPermissions("product:category:update")
+    public R updateBatch(@RequestBody CategoryEntity[] category){
+        //categoryService.updateById(category);
+        categoryService.updateBatchById(Arrays.asList(category));
+        return R.ok();
+    }
+
+    /**
+     * 批量删除
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:category:delete")
     public R delete(@RequestBody Long[] catIds){
-		categoryService.removeByIds(Arrays.asList(catIds));
+        categoryService.removeCategoryByIds(Arrays.asList(catIds));
 
         return R.ok();
     }

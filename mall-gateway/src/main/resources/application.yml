@@ -4,7 +4,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 192.168.153.128:8848
+        server-addr: 192.168.153.130:8848
     gateway:
       routes:
         - id: route1
@@ -15,6 +15,22 @@ spring:
           uri: https://www.jd.com
           predicates:
             - Query=url,jd
+        - id: product_route
+          uri: lb://mall-product
+          predicates:
+            - Path=/app/product/**
+          filters:
+            - RewritePath=/app/(?<segment>/?.*), /$\{segment}
+        - id: app_route
+          uri: lb://renren-fast
+          predicates:
+            - Path=/app/**
+          filters:
+            - RewritePath=/app/(?<segment>/?.*), /renren-fast/$\{segment}
+
+
+# localhost:8070/app/captcha.jpg -->
+# localhost:8080/app/captcha.jpg localhost:8080/renren-fast/captcha.jpg
 # 指定注册中心的服务端口
 server:
   port: 8070
