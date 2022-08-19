@@ -1,6 +1,7 @@
 package com.msb.mall.product;
 
 import com.aliyun.oss.OSSClient;
+import com.msb.mall.product.service.CategoryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +17,9 @@ import java.io.InputStream;
 public class MallProductApplicationTests {
 	@Autowired(required = false)
 	private OSSClient ossClient;
+
+	@Autowired
+	private CategoryService categoryService;
 
 	@Test
 	public void testUploadFile() throws FileNotFoundException {
@@ -36,6 +40,14 @@ public class MallProductApplicationTests {
 		// 关闭OSSClient。
 		ossClient.shutdown();
 		System.out.println("上传图片成功...");
+	}
+
+	@Test
+	public void test1(){
+		Long[] catelogPath = categoryService.findCatelogPath(762l);
+		for (Long along:catelogPath) {
+			System.out.println(along);
+		}
 	}
 
 }

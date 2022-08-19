@@ -1,15 +1,17 @@
 package com.msb.mall.product.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 
+import com.msb.mall.product.entity.AttrEntity;
+import com.msb.mall.product.service.AttrAttrgroupRelationService;
+import com.msb.mall.product.service.AttrService;
+import com.msb.mall.product.service.CategoryService;
+import com.msb.mall.product.vo.AttrGroupRelationVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.msb.mall.product.entity.AttrGroupEntity;
 import com.msb.mall.product.service.AttrGroupService;
@@ -31,14 +33,33 @@ public class AttrGroupController {
     @Autowired
     private AttrGroupService attrGroupService;
 
+    @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
+    private AttrService attrService;
+
+    @Autowired
+    private AttrAttrgroupRelationService relationService;
+
+
     /**
      * 列表
+     * 分页查询
+     * 前端提交请求需要封装对应的分页数据
+     * {
+     *     page:1  //当前页
+     *     limit:10  //每页显示的条数
+     *     sidx:"id"  //排序的字段
+     *     order:"asc/desc" // 排序的方式
+     *     key:"小米" // 查询的关键字
+     * }
      */
-    @RequestMapping("/list")
+    @RequestMapping("/list/{catelogId}")
     //@RequiresPermissions("product:attrgroup:list")
-    public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = attrGroupService.queryPage(params);
-
+    public R list(@RequestParam Map<String, Object> params, @PathVariable("catelogId") Long catelogId){
+//        PageUtils page = attrGroupService.queryPage(params);
+        PageUtils page = attrGroupService.queryPage(params, catelogId);
         return R.ok().put("page", page);
     }
 
@@ -50,9 +71,63 @@ public class AttrGroupController {
     //@RequiresPermissions("product:attrgroup:info")
     public R info(@PathVariable("attrGroupId") Long attrGroupId){
 		AttrGroupEntity attrGroup = attrGroupService.getById(attrGroupId);
-
+        // 根据找到的属性组对应的分类id然后找到对应的【一级，二级，三级】数据
+        Long catelogId = attrGroup.getCatelogId();
+        Long[] paths = categoryService.findCatelogPath(catelogId);
+        attrGroup.setCatelogPath(paths);
         return R.ok().put("attrGroup", attrGroup);
     }
+
+    /**
+     * 查询已被属性组关联的属性信息
+     * @param attrgroupId
+     * @return
+     */
+    // product/attrgroup/6/attr/relation
+    @GetMapping("/{attrgroupId}/attr/relation")
+    public R attRelation(@PathVariable("attrgroupId") Long attrgroupId){
+        List<AttrEntity> list = attrService.getRelationAttr(attrgroupId);
+        return R.ok().put("data", list);
+    }
+
+    /**
+     * 查询未被属性组关联的属性信息
+     * @param attrgroupId
+     * @param params
+     * @return
+     */
+    // /6/noattr/relation?t=1641447927058&page=1&limit=10&key=
+    @GetMapping("/{attrgroupId}/noattr/relation")
+    public R attrNoRelation(@PathVariable("attrgroupId") Long attrgroupId
+            ,@RequestParam Map<String,Object> params){
+        PageUtils pageUtils = attrService.getNoAttrRelation(params,attrgroupId);
+        return R.ok().put("page",pageUtils);
+    }
+
+    /**
+     * 新增属性组与基本属性的关联信息
+     * @param vos
+     * @return
+     */
+    // attr/relation
+    @PostMapping("/attr/relation")
+    public R saveBatch(@RequestBody List<AttrGroupRelationVO> vos){
+        relationService.saveBatch(vos);
+        return R.ok();
+    }
+
+    /**
+     * 删除属性组与基本属性的关联信息
+     * @param vos
+     * @return
+     */
+    // product/attrgroup/6/attr/relation
+    @PostMapping("/attr/relation/delete")
+    public R relationDelete(@RequestBody AttrGroupRelationVO[] vos){
+        attrService.deleteRelation(vos);
+        return R.ok();
+    }
+
 
     /**
      * 保存

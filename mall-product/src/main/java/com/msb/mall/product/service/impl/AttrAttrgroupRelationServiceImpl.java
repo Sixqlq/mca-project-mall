@@ -1,7 +1,13 @@
 package com.msb.mall.product.service.impl;
 
+import com.msb.mall.product.vo.AttrGroupRelationVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -26,4 +32,17 @@ public class AttrAttrgroupRelationServiceImpl extends ServiceImpl<AttrAttrgroupR
         return new PageUtils(page);
     }
 
+    /**
+     * 属性组批量新增基本属性信息
+     * @param vos
+     */
+    @Override
+    public void saveBatch(List<AttrGroupRelationVO> vos) {
+        List<AttrAttrgroupRelationEntity> collect = vos.stream().map((m) -> {
+            AttrAttrgroupRelationEntity entity = new AttrAttrgroupRelationEntity();
+            BeanUtils.copyProperties(m, entity);
+            return entity;
+        }).collect(Collectors.toList());
+        this.saveBatch(collect);
+    }
 }

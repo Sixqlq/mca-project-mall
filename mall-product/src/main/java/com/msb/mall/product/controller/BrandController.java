@@ -45,7 +45,7 @@ public class BrandController {
     /**
      * 列表
      */
-    @RequestMapping("/list")
+    @GetMapping("/list")
     //@RequiresPermissions("product:brand:list")
     public R list(@RequestParam Map<String, Object> params){
         PageUtils page = brandService.queryPage(params);
@@ -101,8 +101,8 @@ public class BrandController {
     @RequestMapping("/update")
     //@RequiresPermissions("product:brand:update")
     public R update(@Validated(UpdateGroupsInterface.class) @RequestBody BrandEntity brand){
-		brandService.updateById(brand);
-
+//		brandService.updateById(brand);
+        brandService.updateDetail(brand);
         return R.ok();
     }
 

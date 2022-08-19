@@ -1,7 +1,11 @@
 package com.msb.mall.product.service.impl;
 
+import com.msb.mall.product.service.CategoryBrandRelationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,11 +19,15 @@ import com.msb.common.utils.Query;
 import com.msb.mall.product.dao.CategoryDao;
 import com.msb.mall.product.entity.CategoryEntity;
 import com.msb.mall.product.service.CategoryService;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 
 @Service("categoryService")
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity> implements CategoryService {
 
+    @Autowired
+    private CategoryBrandRelationService categoryBrandRelationService;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<CategoryEntity> page = this.page(
@@ -84,5 +92,49 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         // 2.批量逻辑删除操作
         baseMapper.deleteBatchIds(ids);
 
+    }
+
+    /**
+     * 查询三级分类路径
+     * @param catelogId
+     * @return
+     */
+    @Override
+    public Long[] findCatelogPath(Long catelogId) {
+        List<Long> paths = new ArrayList<>();
+        List<Long> parentPath = findParentPath(catelogId, paths);
+        Collections.reverse(parentPath);
+        return parentPath.toArray(new Long[parentPath.size()]);
+    }
+
+    /**
+     * 更新类别名称
+     * @param entity
+     */
+    @Transactional
+    @Override
+    public void updateDetail(CategoryEntity entity) {
+        // 更新类别名称
+        this.updateById(entity);
+        if(!StringUtils.isEmpty(entity.getName())){
+            // 同步更新级联的数据
+            categoryBrandRelationService.updateCatelogName(entity.getCatId(), entity.getName());
+            // TODO 同步更新其他的冗余数据
+        }
+    }
+
+    /**
+     * 225,22,2
+     * @param catelogId
+     * @param paths
+     * @return
+     */
+    private List<Long> findParentPath(Long catelogId, List<Long> paths) {
+        paths.add(catelogId);
+        CategoryEntity entity = this.getById(catelogId);
+        if(entity.getParentCid() != 0){
+            findParentPath(entity.getParentCid(), paths);
+        }
+        return paths;
     }
 }
