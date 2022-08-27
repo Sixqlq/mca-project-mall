@@ -21,12 +21,24 @@ spring:
             - Path=/app/product/**
           filters:
             - RewritePath=/app/(?<segment>/?.*), /$\{segment}
-        - id: third-route
+        - id: third_route
           uri: lb://mall-third
           predicates:
             - Path=/app/third/**
           filters:
             - RewritePath=/app/third/(?<segment>/?.*), /$\{segment}
+        - id: member_route
+          uri: lb://mall-member
+          predicates:
+            - Path=/app/member/**
+          filters:
+            - RewritePath=/app/(?<segment>/?.*), /$\{segment}
+        - id: coupon_route
+          uri: lb://mall-coupon
+          predicates:
+            - Path=/app/coupon/**
+          filters:
+            - RewritePath=/app/(?<segment>/?.*), /$\{segment}
         - id: app_route
           uri: lb://renren-fast
           predicates:

@@ -2,7 +2,9 @@ package com.msb.mall.product.service.impl;
 
 import com.msb.mall.product.entity.AttrEntity;
 import com.msb.mall.product.service.AttrService;
+import com.msb.mall.product.vo.AttrGroupWithAttrsVo;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,6 +26,8 @@ import org.springframework.util.StringUtils;
 
 @Service("attrGroupService")
 public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEntity> implements AttrGroupService {
+    @Autowired
+    private AttrService attrService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -67,6 +71,27 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
                 new Query<AttrGroupEntity>().getPage(params),wrapper
         );
         return new PageUtils(page);
+    }
+
+    /**
+     * 1. 根据三级分类的编号查询出对应的所有的属性组
+     * 2. 根据属性组查询对应的属性信息
+     * @param catelogId
+     * @return
+     */
+    @Override
+    public List<AttrGroupWithAttrsVo> getAttrGroupWithAttrsByCatelogId(Long catelogId) {
+        // 1. 根据三级分类的编号查询出对应的所有的属性组
+        List<AttrGroupEntity> attrGroups = this.list(new QueryWrapper<AttrGroupEntity>().eq("catelog_id", catelogId));
+        List<AttrGroupWithAttrsVo> list = attrGroups.stream().map((group)->{
+            AttrGroupWithAttrsVo vo = new AttrGroupWithAttrsVo();
+            BeanUtils.copyProperties(group, vo);
+            // 根据属性组找到属性信息
+            List<AttrEntity> attrEntities = attrService.getRelationAttr(group.getAttrGroupId());
+            vo.setAttrs(attrEntities);
+            return vo;
+        }).collect(Collectors.toList());
+        return list;
     }
 
 }

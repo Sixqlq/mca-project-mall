@@ -16,6 +16,9 @@ spring:
         endpoint: oss-cn-hangzhou.aliyuncs.com
   application:
     name: mall-product
+  # 设置服务器响应给客户端的日期时间格式（统一全局）
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
 
 
 mybatis-plus:

@@ -5,9 +5,14 @@ import com.msb.mall.product.entity.BrandEntity;
 import com.msb.mall.product.entity.CategoryEntity;
 import com.msb.mall.product.service.BrandService;
 import com.msb.mall.product.service.CategoryService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -27,6 +32,9 @@ public class CategoryBrandRelationServiceImpl extends ServiceImpl<CategoryBrandR
 
     @Autowired
     private BrandService brandService;
+
+    @Autowired
+    private CategoryBrandRelationDao categoryBrandRelationDao;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<CategoryBrandRelationEntity> page = this.page(
@@ -81,6 +89,18 @@ public class CategoryBrandRelationServiceImpl extends ServiceImpl<CategoryBrandR
         entity.setCatelogName(name);
         entity.setCatelogId(catId);
         this.update(entity, new UpdateWrapper<CategoryBrandRelationEntity>().eq("catelog_id", catId));
+    }
+
+    /**
+     * 根据分类找到品牌信息
+     * @param catId
+     * @return
+     */
+    @Override
+    public List<CategoryBrandRelationEntity> categoryBrandRelation(Long catId) {
+        // 找到所有的品牌信息
+        List<CategoryBrandRelationEntity> list = categoryBrandRelationDao.selectList(new QueryWrapper<CategoryBrandRelationEntity>().eq("catelog_id", catId));
+        return list;
     }
 
 }
