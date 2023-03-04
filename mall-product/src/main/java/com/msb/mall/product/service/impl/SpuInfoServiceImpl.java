@@ -1,14 +1,20 @@
 package com.msb.mall.product.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.msb.common.constant.ProductConstant;
 import com.msb.common.dto.MemberPrice;
+import com.msb.common.dto.SkuHasStockDto;
 import com.msb.common.dto.SkuReductionDTO;
 import com.msb.common.dto.SpuBoundsDTO;
+import com.msb.common.dto.es.SkuESModel;
 import com.msb.common.utils.R;
 import com.msb.mall.product.entity.*;
 import com.msb.mall.product.feign.CouponFeignService;
+import com.msb.mall.product.feign.SearchFeignService;
+import com.msb.mall.product.feign.WareSkuFeignService;
 import com.msb.mall.product.service.*;
 import com.msb.mall.product.vo.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +37,7 @@ import org.springframework.util.StringUtils;
 
 
 @Service("spuInfoService")
+@Slf4j
 public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> implements SpuInfoService {
     @Autowired
     private SpuInfoDescService spuInfoDescService;
@@ -61,6 +68,12 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     @Autowired
     private BrandService brandService;
+
+    @Autowired
+    private WareSkuFeignService wareSkuFeignService;
+
+    @Autowired
+    private SearchFeignService searchFeignService;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<SpuInfoEntity> page = this.page(
@@ -254,4 +267,110 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     }
 
+    /**
+     * 实现商品上架 -》 商品相关数据存储到ES中
+     * 1. 根据spuId查询出相关信息封装到对应的对象
+     * 2. 将封装的数据存储到ES中，调用mall-search的远程接口
+     * 3. 更新spuId对应的状态-》上架
+     * @param spuId
+     */
+    @Override
+    public void up(Long spuId) {
+        // 1. 根据spuId查询出相关信息封装到对应的对象
+        List<SkuESModel> skuEs = new ArrayList<>();
+        // 根据spuId找到相关的sku信息
+        List<SkuInfoEntity> skus = skuInfoService.getSkusBySpuId(spuId);
+        // 对应的规格和参数 根据spuId查询规格参数信息
+        List<SkuESModel.Attrs> attrsModel = getAttrsModel(spuId);
+        // 需要根据所有的spuId获取对应的库存信息--》远程调用
+        List<Long> skuIds = skus.stream().map(sku -> {
+            return sku.getSkuId();
+        }).collect(Collectors.toList());
+        Map<Long, Boolean> skusHasStockMap = getSkusHasStock(skuIds);
+
+        // 2. 远程调用mall-search的远程接口，将封装的数据存储到ES中
+        List<SkuESModel> skuESModels = skus.stream().map(item -> {
+            SkuESModel model = new SkuESModel();
+            // 先实现属性复制
+            BeanUtils.copyProperties(item, model);
+            model.setSubTitle(item.getSkuTitle());
+            model.setSkuPrice(item.getPrice());
+            // hasStock 是否有库存 --》 库存系统查询 一次远程调用获取所有的skuId对应的库存信息
+            if(skusHasStockMap == null){
+                model.setHasStock(false);
+            }else {
+                model.setHasStock(skusHasStockMap.get(item.getSkuId()));
+            }
+            // hotScore 热度分 --》 默认给0
+            model.setHotScore(0l);
+            // 品牌和类型的名称
+            BrandEntity brand = brandService.getById(item.getBrandId());
+            CategoryEntity category = categoryService.getById(item.getCatalogId());
+            model.setBrandName(brand.getName());
+            model.setCatalogName(category.getName());
+            // 需要存储的规格参数数据
+            model.setAttrs(attrsModel);
+            return model;
+        }).collect(Collectors.toList());
+        // 将SkuESModel中的数据存储到ES中
+        R r = searchFeignService.productStartUp(skuESModels);
+        log.info("----->ES操作完成：{}", r.getCode());
+        // 3. 更新SpuId对应的状态
+        if(r.getCode() == 0){
+            // 远程调用成功 更新商品的状态为上架
+            baseMapper.updateSpuStatusUp(spuId, ProductConstant.StatusEnum.SPU_UP.getCode());
+        }else {
+            // 远程调用失败
+        }
+    }
+
+    /**
+     * 根据spuId获取对应的规格参数
+     * @param spuId
+     * @return
+     */
+    private List<SkuESModel.Attrs> getAttrsModel(Long spuId) {
+        // 1. product_attr_value  存储了对应的spu相关的所有的规格参数
+        List<ProductAttrValueEntity> baseAttrs = productAttrValueService.baseAttrsForSpuId(spuId);
+        // 2. attr search_type 决定了该属性是否支持检索
+        List<Object> attrIds = baseAttrs.stream().map(item -> {
+            return item.getAttrId();
+        }).collect(Collectors.toList());
+        // 查询出所有的可以检索的对应的规格参数编号
+        List<Long> searchAttrIds = attrService.selectSearchAttrIds(attrIds);
+        // baseAttrs 中根据可以检索的数据过滤
+        List<SkuESModel.Attrs> attrsModel = baseAttrs.stream().filter(item -> {
+            return searchAttrIds.contains(item.getAttrId());
+        }).map(item -> {
+            SkuESModel.Attrs attr = new SkuESModel.Attrs();
+//            attr.setAttrId(item.getAttrId());
+//            attr.setAttrName(item.getAttrName());
+//            attr.setAttrValue(item.getAttrValue());
+            BeanUtils.copyProperties(item, attr);
+            return attr;
+        }).collect(Collectors.toList());
+        return attrsModel;
+    }
+
+    /**
+     * 根据skuIds获取对应的库存状态
+     * @param skuIds
+     * @return
+     */
+    private Map<Long, Boolean> getSkusHasStock(List<Long> skuIds){
+        List<SkuHasStockDto> skusHasStock = null;
+        if(skuIds == null || skuIds.size() == 0) {
+            return null;
+        }
+        try {
+            // 调用远程接口获取对应的库存信息
+            skusHasStock = wareSkuFeignService.getSkusHasStock(skuIds);
+            Map<Long, Boolean> map = skusHasStock.stream().
+                    collect(Collectors.toMap(SkuHasStockDto :: getSkuId, SkuHasStockDto::getHasStock));
+            return map;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

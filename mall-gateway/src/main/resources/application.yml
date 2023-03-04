@@ -45,6 +45,12 @@ spring:
             - Path=/app/ware/**
           filters:
             - RewritePath=/app/(?<segment>/?.*), /$\{segment}
+        - id: search_route
+          uri: lb://mall-search
+          predicates:
+            - Path=/app/search/**
+          filters:
+            - RewritePath=/app/(?<segment>/?.*), /$\{segment}
         - id: app_route
           uri: lb://renren-fast
           predicates:

@@ -6,11 +6,7 @@ import java.util.Map;
 
 import com.msb.mall.product.vo.SpuInfoVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.msb.mall.product.entity.SpuInfoEntity;
 import com.msb.mall.product.service.SpuInfoService;
@@ -31,6 +27,20 @@ import com.msb.common.utils.R;
 public class SpuInfoController {
     @Autowired
     private SpuInfoService spuInfoService;
+
+
+    /**
+     * app/product/spuinfo/21/up
+     * 商品的上架功能
+     * 传递过来一个spuId，我们需要根据spuId从mysql中查询出需要存储在ES中的数据
+     * 然后把数据存储在ES中, 并修改该SPU的状态为上架
+     */
+    @PostMapping("{spuId}/up")
+    public R spuUp(@PathVariable("spuId") Long spuId){
+        spuInfoService.up(spuId);
+        return R.ok();
+    }
+
 
     /**
      * 列表

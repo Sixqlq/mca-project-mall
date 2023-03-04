@@ -4,12 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.msb.common.constant.ProductConstant;
 import com.msb.mall.product.dao.AttrAttrgroupRelationDao;
 import com.msb.mall.product.dao.AttrGroupDao;
-import com.msb.mall.product.entity.AttrAttrgroupRelationEntity;
-import com.msb.mall.product.entity.AttrGroupEntity;
-import com.msb.mall.product.entity.CategoryEntity;
-import com.msb.mall.product.service.AttrAttrgroupRelationService;
-import com.msb.mall.product.service.AttrGroupService;
-import com.msb.mall.product.service.CategoryService;
+import com.msb.mall.product.entity.*;
+import com.msb.mall.product.service.*;
 import com.msb.mall.product.vo.AttrGroupRelationVO;
 import com.msb.mall.product.vo.AttrResponseVo;
 import com.msb.mall.product.vo.AttrVO;
@@ -29,8 +25,6 @@ import com.msb.common.utils.PageUtils;
 import com.msb.common.utils.Query;
 
 import com.msb.mall.product.dao.AttrDao;
-import com.msb.mall.product.entity.AttrEntity;
-import com.msb.mall.product.service.AttrService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -316,6 +310,19 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         }
         // 1. 删除属性表中的数据
         this.removeByIds(Arrays.asList(attrIds));
+    }
+
+    /**
+     * 返回可以检索的attrId，也就是search_type = 1的attr集合
+     * @param attrIds
+     * @return
+     */
+    @Override
+    public List<Long> selectSearchAttrIds(List<Object> attrIds) {
+        List<AttrEntity> list = this.list(new QueryWrapper<AttrEntity>().in("attr_id", attrIds).eq("search_type", 1));
+        return list.stream().map(item -> {
+            return item.getAttrId();
+        }).collect(Collectors.toList());
     }
 
 }
