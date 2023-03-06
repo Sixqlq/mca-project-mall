@@ -18,7 +18,7 @@ spring:
         - id: product_route
           uri: lb://mall-product
           predicates:
-            - Path=/app/product/**
+            - Path=/app/product/**,/hello
           filters:
             - RewritePath=/app/(?<segment>/?.*), /$\{segment}
         - id: third_route
@@ -57,6 +57,10 @@ spring:
             - Path=/app/**
           filters:
             - RewritePath=/app/(?<segment>/?.*), /renren-fast/$\{segment}
+        - id: msbmall_host_route
+          uri: lb://mall-product
+          predicates:
+            - Host=msb.mall.com
 
 
 # localhost:8070/app/captcha.jpg -->

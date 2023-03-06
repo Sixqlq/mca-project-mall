@@ -19,8 +19,18 @@ spring:
   # 设置服务器响应给客户端的日期时间格式（统一全局）
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
-
-
+  thymeleaf:
+    cache: false # 关闭thymeleaf的缓存
+  redis:
+    host: 192.168.153.178
+    port: 6379
+  cache:
+    type: redis # SpringCache 缓存的类型是Redis
+    redis:
+      time-to-live: 600000 # 指定缓存key的过期时间
+      #key-prefix: product_
+      use-key-prefix: true
+      cache-null-values: true # 是否缓存空值，防止缓存穿透
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   global-config:

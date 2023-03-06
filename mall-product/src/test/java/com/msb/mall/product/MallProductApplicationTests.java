@@ -3,14 +3,16 @@ package com.msb.mall.product;
 import com.aliyun.oss.OSSClient;
 import com.msb.mall.product.service.CategoryService;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.stereotype.Component;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-
+import java.util.UUID;
 
 
 @SpringBootTest(classes = MallProductApplication.class)
@@ -20,6 +22,33 @@ public class MallProductApplicationTests {
 
 	@Autowired
 	private CategoryService categoryService;
+
+	@Autowired
+	private StringRedisTemplate stringRedisTemplate;
+
+	@Autowired
+	private RedissonClient redissonClient;
+
+	/**
+	 * 测试连接Redis
+	 */
+	@Test
+	public void testStringRedisTemplate(){
+		// 获取操作String类型的Options对象
+		ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
+		// 插入数据
+		ops.set("name", "bobo" + UUID.randomUUID());
+		// 获取存取的信息
+		System.out.println("保存的值: " + ops.get("name"));
+	}
+
+	/**
+	 * 测试获取RedissonClient对象
+	 */
+	@Test
+	public void testRedissonClient(){
+		System.out.println("RedissonClient:" + redissonClient);
+	}
 
 	@Test
 	public void testUploadFile() throws FileNotFoundException {
