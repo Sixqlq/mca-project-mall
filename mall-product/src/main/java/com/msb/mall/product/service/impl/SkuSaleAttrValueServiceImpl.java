@@ -1,6 +1,5 @@
 package com.msb.mall.product.service.impl;
 
-import com.msb.mall.product.vo.ItemVO;
 import com.msb.mall.product.vo.SkuItemSaleAttrVO;
 import org.springframework.stereotype.Service;
 

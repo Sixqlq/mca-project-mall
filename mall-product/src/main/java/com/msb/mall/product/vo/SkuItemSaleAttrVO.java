@@ -2,7 +2,6 @@ package com.msb.mall.product.vo;
 
 import lombok.Data;
 
-import java.util.List;
 
 /**
  * spu中的销售属性VO, pms_sku_sale_attr_value
@@ -12,5 +11,5 @@ import java.util.List;
 public class SkuItemSaleAttrVO{
     private Long attrId;
     private String attrName;
-    private List<String> attrValue;
+    private String attrValue;
 }

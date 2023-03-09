@@ -2,7 +2,6 @@ package com.msb.mall.product.dao;
 
 import com.msb.mall.product.entity.SkuSaleAttrValueEntity;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.msb.mall.product.vo.ItemVO;
 import com.msb.mall.product.vo.SkuItemSaleAttrVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

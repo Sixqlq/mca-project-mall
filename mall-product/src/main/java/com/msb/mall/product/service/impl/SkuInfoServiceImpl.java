@@ -1,19 +1,21 @@
 package com.msb.mall.product.service.impl;
 
 import com.msb.mall.product.entity.SkuImagesEntity;
-import com.msb.mall.product.entity.SkuSaleAttrValueEntity;
 import com.msb.mall.product.entity.SpuInfoDescEntity;
 import com.msb.mall.product.service.*;
-import com.msb.mall.product.vo.ItemVO;
+import com.msb.mall.product.vo.SpuItemVO;
 import com.msb.mall.product.vo.SkuItemSaleAttrVO;
 import com.msb.mall.product.vo.SpuItemGroupAttrVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -39,6 +41,9 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
 
     @Autowired
     private AttrGroupService attrGroupService;
+
+    @Autowired
+    private ThreadPoolExecutor threadPoolExecutor;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -120,29 +125,47 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
 
     /**
      * 根据skuId查询出返回商品详情页的数据
+     * CompletableFuture异步编排处理
      * @param skuId
      * @return
      */
     @Override
-    public ItemVO item(Long skuId) {
-        ItemVO itemVO = new ItemVO();
-        // 1. sku的基本信息 pms_sku_info
-        SkuInfoEntity skuInfo = this.getById(skuId);
-        itemVO.setSkuInfo(skuInfo);
-        Long spuId = skuInfo.getSpuId();
-        Long catalogId = skuInfo.getCatalogId();
-        // 2. sku的图片信息 pms_spu_images
-        List<SkuImagesEntity> skuImages = skuImagesService.getImagesBySkuId(skuId);
-        itemVO.setImages(skuImages);
-        // 3. 获取spu中的销售属性的组合
-        List<SkuItemSaleAttrVO> saleAttrs = skuSaleAttrValueService.getSkuSaleAttrValueBySpuId(spuId);
-        itemVO.setSaleAttrVOS(saleAttrs);
-        // 4. 获取SPU的介绍
-        SpuInfoDescEntity spuInfoDesc = spuInfoDescService.getById(spuId);
-        itemVO.setSpuInfoDesc(spuInfoDesc);
-        // 5. 获取SPU的规格参数信息
-        List<SpuItemGroupAttrVO> groupAttrVo = attrGroupService.getAttrGroupWithSpuId(spuId,catalogId);
-        itemVO.setBaseAttrs(groupAttrVo);
+    public SpuItemVO item(Long skuId) throws ExecutionException, InterruptedException {
+        SpuItemVO itemVO = new SpuItemVO();
+        CompletableFuture<SkuInfoEntity> skuInfoFuture = CompletableFuture.supplyAsync(() -> {
+            // 1. sku的基本信息 pms_sku_info
+            SkuInfoEntity skuInfo = getById(skuId);
+            itemVO.setInfo(skuInfo);
+
+            return skuInfo;
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> saleFuture = skuInfoFuture.thenAcceptAsync((res) -> {
+            // 3. 获取spu中的销售属性的组合
+            List<SkuItemSaleAttrVO> saleAttrs = skuSaleAttrValueService.getSkuSaleAttrValueBySpuId(res.getSpuId());
+            itemVO.setSaleAttrs(saleAttrs);
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> spuFuture = skuInfoFuture.thenAcceptAsync((res) -> {
+            // 4. 获取SPU的介绍
+            SpuInfoDescEntity spuInfoDesc = spuInfoDescService.getById(res.getSpuId());
+            itemVO.setDesc(spuInfoDesc);
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> groupFuture = skuInfoFuture.thenAcceptAsync((res) -> {
+            // 5. 获取SPU的规格参数信息
+            List<SpuItemGroupAttrVO> groupAttrVo = attrGroupService.getAttrGroupWithSpuId(res.getSpuId(), res.getCatalogId());
+            itemVO.setBaseAttrs(groupAttrVo);
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> imageFuture = CompletableFuture.runAsync(() -> {
+            // 2. sku的图片信息 pms_spu_images
+            List<SkuImagesEntity> skuImages = skuImagesService.getImagesBySkuId(skuId);
+            itemVO.setImages(skuImages);
+        }, threadPoolExecutor);
+
+        CompletableFuture.allOf(saleFuture, spuFuture, groupFuture, imageFuture).get();
+
         return itemVO;
     }
 

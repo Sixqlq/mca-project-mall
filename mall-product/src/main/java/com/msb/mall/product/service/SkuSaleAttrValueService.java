@@ -3,7 +3,6 @@ package com.msb.mall.product.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.msb.common.utils.PageUtils;
 import com.msb.mall.product.entity.SkuSaleAttrValueEntity;
-import com.msb.mall.product.vo.ItemVO;
 import com.msb.mall.product.vo.SkuItemSaleAttrVO;
 
 import java.util.List;
