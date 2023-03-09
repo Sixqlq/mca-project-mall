@@ -11,6 +11,9 @@
         <result property="imgSort" column="img_sort"/>
         <result property="defaultImg" column="default_img"/>
     </resultMap>
+    <select id="getImagesBySkuId" resultType="com.msb.mall.product.entity.SkuImagesEntity">
+        SELECT * FROM `pms_sku_images` WHERE sku_id = #{skuId}
+    </select>
 
 
 </mapper>
