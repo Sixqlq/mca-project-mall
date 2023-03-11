@@ -9,6 +9,12 @@ spring:
       oss:
         endpoint: oss-cn-hangzhou.aliyuncs.com
         bucket: qlq-mall
+      # 短信验证服务参数配置
+      sms:
+        host: https://dfsns.market.alicloudapi.com
+        path: /data/send_sms
+        method: POST
+        appCode: 8bbf0cda1bfa4430a3c1776134aa3806
     application:
       name: mall-third
 server:
