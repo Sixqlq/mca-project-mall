@@ -1,5 +1,6 @@
 package com.msb.mall.third.utils;
 
+import com.msb.common.utils.HttpUtils;
 import lombok.Data;
 import org.apache.http.HttpResponse;
 import org.springframework.boot.context.properties.ConfigurationProperties;

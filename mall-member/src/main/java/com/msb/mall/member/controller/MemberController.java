@@ -4,11 +4,13 @@ import java.util.Arrays;
 import java.util.Map;
 
 
+import com.alibaba.fastjson.JSON;
 import com.msb.common.exception.BizCodeEnume;
 import com.msb.mall.member.exception.PhoneExistException;
 import com.msb.mall.member.exception.UserNameExistException;
 import com.msb.mall.member.vo.MemberLoginVO;
 import com.msb.mall.member.vo.MemberRegisterVO;
+import com.msb.mall.member.vo.SocialUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,9 +60,19 @@ public class MemberController {
     public R login(@RequestBody MemberLoginVO vo){
         MemberEntity entity = memberService.login(vo);
         if(entity != null){
-            return R.ok();
+            return R.ok().put("entity", JSON.toJSONString(entity));
         }
         return R.error(BizCodeEnume.USERNAME_PHONE_VALID_EXCEPTION.getCode(), BizCodeEnume.USERNAME_PHONE_VALID_EXCEPTION.getMsg());
+    }
+
+    /**
+     * 社交登录
+     * @return
+     */
+    @RequestMapping("/oauth2/login")
+    public R socialLogin(@RequestBody SocialUser vo){
+        MemberEntity entity = memberService.socialLogin(vo);
+        return R.ok().put("entity", JSON.toJSONString(entity));
     }
 
     /**

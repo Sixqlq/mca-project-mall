@@ -2,6 +2,7 @@ package com.msb.mall.mallauth_server.feign;
 
 import com.msb.common.utils.R;
 import com.msb.mall.mallauth_server.vo.LoginVO;
+import com.msb.mall.mallauth_server.vo.SocialUser;
 import com.msb.mall.mallauth_server.vo.UserRegisterVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,4 +16,7 @@ public interface MemberFeignService {
 
     @RequestMapping("/member/member/login")
     public R login(@RequestBody LoginVO vo);
+
+    @RequestMapping("/member/member/oauth2/login")
+    public R socialLogin(@RequestBody SocialUser vo);
 }

@@ -169,4 +169,14 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
         return itemVO;
     }
 
+    /**
+     * 根据skuId查询销售信息
+     * @param skuId
+     * @return
+     */
+    @Override
+    public List<String> getSkuSaleAttrs(Long skuId) {
+        return baseMapper.getSkuSaleAttrs(skuId);
+    }
+
 }

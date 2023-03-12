@@ -1,0 +1,24 @@
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.153.178:8848
+  application:
+    name: mall-cart
+  # 统一的全局的--设置服务器响应给客户端的日期时间格式
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  thymeleaf:
+    cache: false
+  redis:
+    host: 192.168.153.178
+    port: 6379
+  session:
+    store-type: redis
+    timeout: 30m
+    redis:
+      namespace: spring:session
+
+server:
+  port: 8120

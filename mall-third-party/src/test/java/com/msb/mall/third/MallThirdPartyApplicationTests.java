@@ -1,7 +1,7 @@
 package com.msb.mall.third;
 
 import com.aliyun.oss.OSSClient;
-import com.msb.mall.third.utils.HttpUtils;
+import com.msb.common.utils.HttpUtils;
 import com.msb.mall.third.utils.SMSComponent;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;

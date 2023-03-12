@@ -1,4 +1,4 @@
-package com.msb.mall.third.utils;
+package com.msb.common.utils;
 
 
 import java.io.UnsupportedEncodingException;

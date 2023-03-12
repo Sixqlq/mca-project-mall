@@ -1,8 +1,11 @@
 package com.msb.mall.mallauth_server.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.msb.common.constant.AuthConstant;
 import com.msb.common.constant.SMSConstant;
 import com.msb.common.exception.BizCodeEnume;
 import com.msb.common.utils.R;
+import com.msb.common.vo.MemberVO;
 import com.msb.mall.mallauth_server.feign.MemberFeignService;
 import com.msb.mall.mallauth_server.feign.ThirdPartFeignService;
 import com.msb.mall.mallauth_server.vo.LoginVO;
@@ -17,6 +20,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +66,13 @@ public class LoginController {
         return R.ok();
     }
 
+    /**
+     * 提交信息注册会员
+     * @param vo
+     * @param result
+     * @param model
+     * @return
+     */
     @PostMapping("/sms/register")
     public String register(@Valid UserRegisterVO vo, BindingResult result, Model model){
         Map<String, String> map = new HashMap<>();
@@ -90,7 +101,7 @@ public class LoginController {
                 R r = memberFeignService.register(vo);
                 if(r.getCode() == 0){
                     // 注册成功
-                    return "redirect:http://msb.auth.com/login.html";
+                    return "redirect:http://auth.msb.com/login.html";
                 }else {
                     // 注册失败
                     map.put("msg", r.getCode() + ":" + r.get("msg"));
@@ -102,19 +113,22 @@ public class LoginController {
     }
 
     /**
-     *
+     * 普通账号密码登录
      * @return
      */
     @PostMapping("/login")
-    public String login(LoginVO loginVO, RedirectAttributes redirectAttributes){
+    public String login(LoginVO loginVO, HttpSession session){
         R r = memberFeignService.login(loginVO);
         if(r.getCode() == 0){
+            String entityJson = (String) r.get("entity");
+            MemberVO memberVO = JSON.parseObject(entityJson, MemberVO.class);
+            session.setAttribute(AuthConstant.AUTH_SESSION_REDIS, memberVO);
             // 表示登录成功 跳转到商城首页
-            return "redirect:http://msb.mall.com/home.html";
+            return "redirect:http://mall.msb.com/home.html";
         }
 
-        redirectAttributes.addAttribute("errors", r.get("msg"));
+        session.setAttribute("errors", r.get("msg"));
         // 表示登录失败,重新跳转到登录页面
-        return "redirect:http://msb.auth.com/login.html";
+        return "redirect:http://auth.msb.com/login.html";
     }
 }
