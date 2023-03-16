@@ -1,8 +1,12 @@
 package com.msb.mall.order.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.msb.common.exception.NoStockException;
 import com.msb.common.utils.PageUtils;
 import com.msb.mall.order.entity.OrderEntity;
+import com.msb.mall.order.vo.OrderConfirmVO;
+import com.msb.mall.order.vo.OrderResponseVO;
+import com.msb.mall.order.vo.OrderSubmitVO;
 
 import java.util.Map;
 
@@ -16,5 +20,9 @@ import java.util.Map;
 public interface OrderService extends IService<OrderEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    OrderConfirmVO confirmOrder();
+
+    OrderResponseVO submitOrder(OrderSubmitVO vo) throws NoStockException;
 }
 

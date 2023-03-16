@@ -24,7 +24,7 @@ public class SearchParam {
     /**
      * brandId=1&brandId=2
      */
-    private List<Long> brandId; //按照品牌来查询, 可以多选
+    private Long brandId; //按照品牌来查询, 可以多选
     /**
      * skuPrice=200_300 200-300之间
      * skuPrice=_300 最高300

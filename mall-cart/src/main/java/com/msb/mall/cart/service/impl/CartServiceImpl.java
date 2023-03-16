@@ -13,6 +13,7 @@ import com.msb.mall.cart.vo.SkuInfoVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 /**
  * 购物车信息存储在redis中
@@ -28,7 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Service
 public class CartServiceImpl implements ICartService {
     @Autowired
-    RedisTemplate redisTemplate;
+    StringRedisTemplate redisTemplate;
 
     @Autowired
     ProductFeignService productFeignService;
@@ -86,6 +88,7 @@ public class CartServiceImpl implements ICartService {
             item.setPrice(vo.getPrice());
             item.setImage(vo.getSkuDefaultImg());
             item.setSkuId(skuId);
+            item.setSpuId(vo.getSpuId());
             item.setTitle(vo.getSkuTitle());
         }, threadPoolExecutor);
         CompletableFuture future2 = CompletableFuture.runAsync(()->{
@@ -98,6 +101,24 @@ public class CartServiceImpl implements ICartService {
         String json = JSON.toJSONString(item);
         hashOperations.put(skuId.toString(), json);
         return item;
+    }
+
+    /**
+     * 获取当前登录用户选中购物车的商品信息
+     * @return
+     */
+    @Override
+    public List<CartItem> getUserCartItems() {
+        BoundHashOperations<String, Object, Object> operations = getCartKeyOperation();
+        List<Object> values = operations.values();
+        List<CartItem> list = values.stream().map(item -> {
+            String json = (String) item;
+            CartItem cartItem = JSON.parseObject(json, CartItem.class);
+            return cartItem;
+        }).filter(cartItem -> {
+            return cartItem.isCheck();
+        }).collect(Collectors.toList());
+        return list;
     }
 
     private BoundHashOperations<String, Object, Object> getCartKeyOperation() {

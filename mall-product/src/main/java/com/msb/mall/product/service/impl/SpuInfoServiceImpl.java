@@ -327,6 +327,31 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         }
     }
 
+    @Override
+    public List<OrderItemSpuInfoVO> getOrderItemSpuInfoBySpuId(Long[] spuIds) {
+        List<OrderItemSpuInfoVO> list = new ArrayList<>();
+        // 根据spuId查询出相关信息
+        for (Long spuId : spuIds) {
+            OrderItemSpuInfoVO vo = new OrderItemSpuInfoVO();
+            SpuInfoEntity spuInfoEntity = this.getById(spuId);
+            vo.setId(spuId);
+            vo.setSpuName(spuInfoEntity.getSpuName());
+            vo.setBrandId(spuInfoEntity.getBrandId());
+            vo.setCatalogId(spuInfoEntity.getCatalogId());
+            // 根据品牌编号查询品牌信息
+            BrandEntity brand = brandService.getById(spuInfoEntity.getBrandId());
+            vo.setBrandName(brand.getName());
+            // 根据类别编号查询品牌信息
+            CategoryEntity category = categoryService.getById(spuInfoEntity.getCatalogId());
+            vo.setCatalogName(category.getName());
+            // 获取spu图片
+            SpuInfoDescEntity spuInfoDesc = spuInfoDescService.getById(spuId);
+            vo.setImg(spuInfoDesc.getDecript());
+            list.add(vo);
+        }
+        return list;
+    }
+
     /**
      * 根据spuId获取对应的规格参数
      * @param spuId

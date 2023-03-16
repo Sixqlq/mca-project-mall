@@ -11,7 +11,18 @@ spring:
         server-addr: 192.168.153.178:8848
   application:
     name: mall-order
-
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  thymeleaf:
+    cache: false
+  session:
+    store-type: redis
+    redis:
+      namespace: spring:session
+    timeout: 30m
+  redis:
+    host: 192.168.153.178
+    port: 6379
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   global-config:

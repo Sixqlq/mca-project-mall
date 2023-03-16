@@ -34,8 +34,8 @@ public class OAuth2Controller {
     public String weiboOAuth(@RequestParam("code") String code, HttpSession session) throws Exception {
         // 根据code信息获取token信息
         Map<String, String> body = new HashMap<>();
-        body.put("client_id","1093598037");
-        body.put("client_secret","1085c8de04dee49e9bb110eaf2d3cf62");
+        body.put("client_id","3807740014");
+        body.put("client_secret","03c7c33e4b4095ae622e5d8c4bc1a947");
         body.put("grant_type","authorization_code");
         body.put("redirect_uri","http://auth.msb.com/oauth/weibo/success");
         body.put("code",code);

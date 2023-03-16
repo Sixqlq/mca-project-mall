@@ -8,12 +8,25 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 
 @Controller
 public class CartController {
     @Autowired
     private ICartService cartService;
+
+    /**
+     * 当前用户订单选中购物车的信息
+     * @return
+     */
+    @GetMapping("/getUserCartItems")
+    @ResponseBody
+    public List<CartItem> getUserCartItems(){
+        return cartService.getUserCartItems();
+    }
 
     /**
      * 展示当前用户购物车信息
@@ -23,8 +36,8 @@ public class CartController {
     @GetMapping("/cart_list")
     public String queryCartList(Model model) {
         Cart cart = cartService.getCartList();
-        model.addAttribute("list", cart);
-        return "/cartList";
+        model.addAttribute("cart", cart);
+        return "cartList";
     }
 
     /**
@@ -42,7 +55,7 @@ public class CartController {
             e.printStackTrace();
         }
         model.addAttribute("item", item);
-        return "/success";
+        return "success";
     }
 }
 

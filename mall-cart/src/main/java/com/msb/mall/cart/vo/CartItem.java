@@ -9,6 +9,7 @@ import java.util.List;
 public class CartItem {
     // 商品的编号 SkuId
     private Long skuId;
+    private Long spuId;
     // 商品的图片
     private String image;
     // 商品的标题
@@ -30,6 +31,13 @@ public class CartItem {
 
     public void setSkuId(Long skuId) {
         this.skuId = skuId;
+    }
+    public Long getSpuId() {
+        return spuId;
+    }
+
+    public void setSpuId(Long spuId) {
+        this.spuId = spuId;
     }
 
     public String getImage() {

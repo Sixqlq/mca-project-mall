@@ -13,4 +13,6 @@ public interface ICartService {
     public Cart getCartList();
 
     CartItem addCart(Long skuId, Integer num) throws Exception;
+
+    List<CartItem> getUserCartItems();
 }

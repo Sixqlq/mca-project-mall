@@ -23,7 +23,11 @@ public class AuthInterceptor implements HandlerInterceptor {
         if(attribute != null){
             MemberVO memberVO = (MemberVO) attribute;
             threadLocal.set(memberVO);
+            return true;
         }
-        return true;
+        // 如果attribute = null 说明用户没有登录，需要重定向到登录页面
+        session.setAttribute(AuthConstant.AUTH_SESSION_MSG, "请先登录");
+        response.sendRedirect("http://auth.msb.com/login.html");
+        return false;
     }
 }

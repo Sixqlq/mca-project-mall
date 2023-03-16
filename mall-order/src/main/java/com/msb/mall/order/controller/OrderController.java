@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 
-import com.msb.mall.order.feign.ProductService;
+import com.msb.mall.order.feign.ProductFeignService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -32,12 +32,12 @@ public class OrderController {
     private OrderService orderService;
 
     @Autowired
-    private ProductService productService;
+    private ProductFeignService productFeignService;
 
     @GetMapping("/products")
     public R queryProduct(){
         // OpenFeign 远程调用服务
-        return R.ok().put("products", productService.queryAllBrand());
+        return R.ok().put("products", productFeignService.queryAllBrand());
     }
 
     @Value("${user.name}")

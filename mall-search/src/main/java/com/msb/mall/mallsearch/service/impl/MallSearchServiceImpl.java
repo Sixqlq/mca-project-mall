@@ -93,7 +93,7 @@ public class MallSearchServiceImpl implements MallSearchService {
             boolQuery.filter(QueryBuilders.matchQuery("catalogId", param.getCatalog3Id()));
         }
         // 1.3 品牌的检索条件
-        if(param.getBrandId() != null && param.getBrandId().size() > 0){
+        if(param.getBrandId() != null){
             boolQuery.filter(QueryBuilders.matchQuery("brandId", param.getBrandId()));
         }
         // 1.4 库存的检索条件
@@ -195,7 +195,7 @@ public class MallSearchServiceImpl implements MallSearchService {
         sourceBuilder.aggregation(attr_agg);
 
         // 测试打印sourceBuilder
-        System.out.println(sourceBuilder.toString());
+//        System.out.println(sourceBuilder.toString());
         searchRequest.source(sourceBuilder);
         return searchRequest;
     }
