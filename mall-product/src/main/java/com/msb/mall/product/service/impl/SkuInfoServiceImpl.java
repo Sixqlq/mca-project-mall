@@ -1,8 +1,12 @@
 package com.msb.mall.product.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.msb.common.utils.R;
 import com.msb.mall.product.entity.SkuImagesEntity;
 import com.msb.mall.product.entity.SpuInfoDescEntity;
+import com.msb.mall.product.feign.SeckillFeignService;
 import com.msb.mall.product.service.*;
+import com.msb.mall.product.vo.SeckillVO;
 import com.msb.mall.product.vo.SpuItemVO;
 import com.msb.mall.product.vo.SkuItemSaleAttrVO;
 import com.msb.mall.product.vo.SpuItemGroupAttrVO;
@@ -44,6 +48,9 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
 
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
+
+    @Autowired
+    private SeckillFeignService seckillFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -164,7 +171,13 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
             itemVO.setImages(skuImages);
         }, threadPoolExecutor);
 
-        CompletableFuture.allOf(saleFuture, spuFuture, groupFuture, imageFuture).get();
+        CompletableFuture<Void> seckillFuture = CompletableFuture.runAsync(() -> {
+            // 查询商品的秒杀活动
+            R r = seckillFeignService.getSeckillSessionBySkuId(skuId);
+            SeckillVO seckillVO = JSON.parseObject((String) r.get("data"), SeckillVO.class);
+            itemVO.setSeckillVO(seckillVO);
+        }, threadPoolExecutor);
+        CompletableFuture.allOf(saleFuture, spuFuture, groupFuture, imageFuture, seckillFuture).get();
 
         return itemVO;
     }

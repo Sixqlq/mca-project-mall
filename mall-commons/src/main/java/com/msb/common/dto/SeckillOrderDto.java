@@ -1,0 +1,20 @@
+package com.msb.common.dto;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+@Data
+public class SeckillOrderDto {
+    private String orderSn; // 订单编号
+
+    private Long skuId;
+
+    private Long promotionSessionId; // 秒杀活动编号
+
+    private BigDecimal seckillPrice; // 秒杀价格
+
+    private Integer num; // 秒杀的商品数量
+
+    private Long memberId; // 会员编号
+}

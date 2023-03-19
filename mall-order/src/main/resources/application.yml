@@ -35,3 +35,10 @@ server:
 user:
   name: zhangSan
   age: 18
+
+rocketmq:
+  name-server: 192.168.153.178:9876
+  producer:
+    group: order-producer
+  consumer:
+    group: order-consumer

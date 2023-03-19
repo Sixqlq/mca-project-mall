@@ -10,6 +10,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -56,5 +58,12 @@ public class OrderWebController {
             // 下单失败，回到订单结算页
             return "redirect:http://order.msb.com/toTrade";
         }
+    }
+
+    @PostMapping("/orderPay")
+    public String orderPay(@RequestParam String orderSn){
+        // TODO 完成相关的支付操作
+        System.out.println("orderSn = " + orderSn);
+        return "list";
     }
 }

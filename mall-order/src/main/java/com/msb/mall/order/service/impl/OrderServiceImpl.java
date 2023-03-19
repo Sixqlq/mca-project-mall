@@ -2,6 +2,7 @@ package com.msb.mall.order.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.msb.common.constant.OrderConstant;
+import com.msb.common.dto.SeckillOrderDto;
 import com.msb.common.exception.NoStockException;
 import com.msb.common.utils.R;
 import com.msb.common.vo.MemberVO;
@@ -13,18 +14,18 @@ import com.msb.mall.order.feign.ProductFeignService;
 import com.msb.mall.order.feign.WareFeignService;
 import com.msb.mall.order.interceptor.AuthInterceptor;
 import com.msb.mall.order.service.OrderItemService;
+import com.msb.mall.order.utils.OrderMsgProducer;
 import com.msb.mall.order.vo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -64,6 +65,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Autowired
     WareFeignService wareFeignService;
+
+    @Autowired
+    OrderMsgProducer orderMsgProducer;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -118,7 +122,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         return vo;
     }
 
-    private Lock lock = new ReentrantLock();
     /**
      * 提交订单
      * @param vo
@@ -145,7 +148,46 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         responseVO.setOrderEntity(orderCreateTO.getOrderEntity());
         // 3. 保存订单信息
         saveOrder(orderCreateTO);
-        // 4. 锁定库存信息 订单号 sku_id sku_name 商品数量
+        // 4. 锁定库存
+        lockWareSkuStock(responseVO, orderCreateTO);
+        // 5. 同步更新用户的会员积分
+
+        // 订单成功后需要给 消息中间件发送延迟30分钟的关单消息
+        orderMsgProducer.sendOrderMessage(orderCreateTO.getOrderEntity().getOrderSn());
+        return responseVO;
+    }
+
+    /**
+     * 快速完成订单处理 秒杀活动
+     * @param orderDto
+     */
+    @Transactional
+    @Override
+    public void quickCreateOrder(SeckillOrderDto orderDto) {
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setOrderSn(orderDto.getOrderSn());
+        orderEntity.setStatus(OrderConstant.OrderStatusEnum.FOR_THE_PAYMENT.getCode());
+        orderEntity.setMemberId(orderDto.getMemberId());
+        orderEntity.setTotalAmount(orderDto.getSeckillPrice().multiply(new BigDecimal(orderDto.getNum())));
+        this.save(orderEntity);
+        OrderItemEntity itemEntity = new OrderItemEntity();
+        // TODO 根据skuId查询对应的sku信息和spu信息
+        itemEntity.setOrderSn(orderDto.getOrderSn());
+        itemEntity.setSkuPrice(orderDto.getSeckillPrice());
+        itemEntity.setSkuId(orderDto.getSkuId());
+        itemEntity.setRealAmount(orderDto.getSeckillPrice().multiply(new BigDecimal(orderDto.getNum())));
+        itemEntity.setSkuQuantity(orderDto.getNum());
+        orderItemService.save(itemEntity);
+    }
+
+    /**
+     * 锁定库存
+     * 封装WareSkuLockVO对象，需要获取订单号、sku_id、sku_name、商品数量信息
+     * @param responseVO
+     * @param orderCreateTO
+     * @throws NoStockException
+     */
+    private void lockWareSkuStock(OrderResponseVO responseVO, OrderCreateTO orderCreateTO) throws NoStockException {
         WareSkuLockVO wareSkuLockVO = new WareSkuLockVO();
         wareSkuLockVO.setOrderSn(orderCreateTO.getOrderEntity().getOrderSn());
         List<OrderItemVO> orderItemVOs = orderCreateTO.getOrderItemEntities().stream().map(item -> {
@@ -166,7 +208,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             responseVO.setCode(2); // 表示库存不足，锁定失败
             throw new NoStockException(10000l);
         }
-        return responseVO;
     }
 
     /**

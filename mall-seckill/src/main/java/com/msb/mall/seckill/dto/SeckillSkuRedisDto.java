@@ -1,11 +1,15 @@
-package com.msb.mall.product.vo;
+package com.msb.mall.seckill.dto;
 
+import com.msb.mall.seckill.vo.SkuInfoVo;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * 封装Sku相关信息，保存到Redis中的传输对象
+ */
 @Data
-public class SeckillVO {
+public class SeckillSkuRedisDto {
     private Long promotionSessionId;
 
     private Long skuId;
@@ -18,8 +22,12 @@ public class SeckillVO {
 
     private Integer seckillSort;
 
+    private SkuInfoVo skuInfoVo;
+
     private Long startTime;
+
     private Long endTime;
+
     // 随机码
     private String randCode;
 }

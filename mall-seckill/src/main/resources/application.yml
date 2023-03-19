@@ -1,0 +1,34 @@
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.153.178:8848
+  application:
+    name: mall-seckill
+  # 统一的全局的--设置服务器响应给客户端的日期时间格式
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  redis:
+    host: 192.168.153.178
+    port: 6379
+  task:
+    execution:
+      pool:
+        max-size: 20
+        core-size: 5
+  session:
+    store-type: redis
+    redis:
+      namespace: spring:redis
+server:
+  port: 8130
+
+# RocketMQ 相关配置
+rocketmq:
+  name-server: 192.168.153.178:9876
+  producer:
+    group: seckill-order-producer
+  consumer:
+    group: seckill-order-consumer
+
